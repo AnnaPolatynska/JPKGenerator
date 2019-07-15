@@ -34,12 +34,10 @@ namespace nsJPK_Generator
         {
             InitializeComponent();
 
-
             eventLog1 = new System.Diagnostics.EventLog();
             if (!System.Diagnostics.EventLog.SourceExists("MySource"))
             {
-                System.Diagnostics.EventLog.CreateEventSource(
-                    "MySource", "MyNewLog");
+                System.Diagnostics.EventLog.CreateEventSource("MySource", "MyNewLog");
             }
             eventLog1.Source = "MySource";
             eventLog1.Log = "MyNewLog";
@@ -48,7 +46,7 @@ namespace nsJPK_Generator
 
         protected override void OnStart(string[] args)
         {
-            WriteToFile("Service is started at " + DateTime.Now);
+            WriteToFile("Serwis uruchomiony " + DateTime.Now);
             eventLog1.WriteEntry("In OnStart.");
 
             timer.Elapsed += new ElapsedEventHandler(this.OnTimer);
@@ -60,7 +58,7 @@ namespace nsJPK_Generator
 
         protected override void OnStop()
         {  
-            WriteToFile("Service is stopped at " + DateTime.Now);
+            WriteToFile("Serwis zatrzymany " + DateTime.Now);
             eventLog1.WriteEntry("In OnStop.");
             timer.Enabled = false;
         }//OnStop()
@@ -70,24 +68,20 @@ namespace nsJPK_Generator
             //Start do monitorowania
             SprawdzFor_Process();
 
-            //WriteToFile("Sprawdzono Proces onTimer " + DateTime.Now);
+            WriteToFile("Sprawdzono Proces " + DateTime.Now);
             eventLog1.WriteEntry("Monitorowanie Systemu", EventLogEntryType.Information, eventId++);
 
         }//OnTimer(object sender, ElapsedEventArgs args)
-
-        /*private void OnElapsedTime(object source, ElapsedEventArgs e)
-        {
-            //SprawdzFor_Process();
-            WriteToFile("Service is onElapsedTime " + DateTime.Now);
-        }*/
 
         /// <summary>
         /// Sprawdza tabelę dbo.app_jpk i gdy napotka true w kolumnie for_process to tworzy xml dla danej firmy. Po wygenerowaniu raportu zamienia na false(zrealizowane).
         /// </summary>
         public static void SprawdzFor_Process()
         {
+            Service1 service1 = new Service1();
             try
             {
+               // string connString = "";
                 string connString = _connString;
                 SqlConnection sqlConnection = new SqlConnection(connString);
 
@@ -97,7 +91,6 @@ namespace nsJPK_Generator
                 sqlDataAdapter.Fill(dataSet, "dbo.app_jpk");
                 DataTable dataTable = dataSet.Tables["dbo.app_jpk"];
 
-
                 bool _for_process;
                 foreach (DataRow dataRow in dataTable.Rows)
                 {
@@ -105,11 +98,10 @@ namespace nsJPK_Generator
                     if (_for_process == true)
                     {
                         _idJPK = int.Parse(dataRow["id"].ToString());
-
-                        Service1 service1 = new Service1();
+                                                                      
                         // tworzy plik xml o podanej nazwie w katalogu projektu
                         service1.WriteXMLToFile(_idJPK);
-
+                                            
                         // zmienia po wygenerowaniu pliku status na zrealizowane
                         _for_process = false;
                         var sqlUpdate = "UPDATE dbo.app_jpk SET for_process = @for_process WHERE id=@id;";
@@ -133,8 +125,7 @@ namespace nsJPK_Generator
             }//try
             catch
             {
-                Service1 service1 = new Service1();
-                service1.WriteToFile("Nie można połączyć z bazą danych " + DateTime.Now);
+               service1.WriteToFile("Nie można połączyć z bazą danych " + DateTime.Now);
             }
        
         }//SprawdzFor_Process()
@@ -148,25 +139,38 @@ namespace nsJPK_Generator
         {
             string name = System.Configuration.ConfigurationManager.AppSettings["filename"].ToString();
             string filename = name + idJPK + ".xml";
+
             //string path = AppDomain.CurrentDomain.BaseDirectory + "\\JPK";
+            //string path = AppDomain.CurrentDomain.BaseDirectory + System.Configuration.ConfigurationManager.AppSettings["path"].ToString();
+            //string path = "C:/Users/polann/Desktop\\JPK";
+            string path = System.Configuration.ConfigurationManager.AppSettings["path"].ToString(); //ścieżka zapisu z pliku konfiguracyjnego.
 
             //int.Parse(System.Configuration.ConfigurationManager.AppSettings["timer_interval"].ToString());
-            string path = AppDomain.CurrentDomain.BaseDirectory + System.Configuration.ConfigurationManager.AppSettings["folder"].ToString();
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
             }
 
-            string filepath = AppDomain.CurrentDomain.BaseDirectory + "\\JPK\\" + DateTime.Now.ToShortDateString().Replace('/', '_')+"_"+ filename;
+            //string filepath = AppDomain.CurrentDomain.BaseDirectory + "\\JPK\\" + DateTime.Now.ToShortDateString().Replace('/', '_')+"_"+ filename;
+            string filepath = path + "\\" + DateTime.Now.ToShortDateString().Replace('/', '_')+"_"+ filename;
            // string filepath = AppDomain.CurrentDomain.BaseDirectory + "\\JPK\\" + DateTime.Now.Date.ToShortDateString().Replace('/', '_') + "_" + filename;
             if (!File.Exists(filepath))
             {
-                CreateXML(filepath);
-                WriteToFile("Wygenerowano JPK nr " + filename + " " + DateTime.Now);
+                try
+                {
+                    CreateXML(filepath);
+                    WriteToFile("Wygenerowano " + filename + " " + DateTime.Now);
+                }
+                catch { WriteToFile("Problem z wygenerowaniem pliku" + filename); }
             }
             else
             {
-                CreateXML(filename);
+                try
+                {
+                    CreateXML(filepath);
+                }
+                catch
+                { WriteToFile("Problem z wygenerowaniem pliku" + filename); }
             }
            
             
@@ -196,12 +200,13 @@ namespace nsJPK_Generator
 
         public void WriteToFile(string Message)
         {
-            string path = AppDomain.CurrentDomain.BaseDirectory + "\\TEST";
+            string path = AppDomain.CurrentDomain.BaseDirectory + "\\ArchiwumX";
             if (!Directory.Exists(path))
             {
                 Directory.CreateDirectory(path);
             }
-            string filepath = AppDomain.CurrentDomain.BaseDirectory + "\\TEST\\ServiceLog_" + DateTime.Now.Date.ToShortDateString().Replace('/', '_') + ".txt";
+            //string filepath = AppDomain.CurrentDomain.BaseDirectory + "\\TEST\\ServiceLog_" + DateTime.Now.Date.ToShortDateString().Replace('/', '_') + ".txt";
+            string filepath = AppDomain.CurrentDomain.BaseDirectory + "\\ArchiwumX\\ServiceLog.txt";
             if (!File.Exists(filepath))
             {
                 // Stworzenie pliku do zapisu.   
