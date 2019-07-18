@@ -68,7 +68,7 @@ namespace nsJPK_Generator
             //Start do monitorowania
             SprawdzFor_Process();
 
-            WriteToFile("Sprawdzono Proces " + DateTime.Now);
+           // WriteToFile("Sprawdzono Proces " + DateTime.Now);
             eventLog1.WriteEntry("Monitorowanie Systemu", EventLogEntryType.Information, eventId++);
 
         }//OnTimer(object sender, ElapsedEventArgs args)
@@ -168,6 +168,7 @@ namespace nsJPK_Generator
                 try
                 {
                     CreateXML(filepath);
+                    WriteToFile("Zaktualizowano plik " + filename + " " + DateTime.Now);
                 }
                 catch
                 { WriteToFile("Problem z wygenerowaniem pliku" + filename); }
